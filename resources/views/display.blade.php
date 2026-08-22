@@ -339,7 +339,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            min-height: 0; /* Penting untuk agar scroll berfungsi pada child flex */
         }
         
         .calendar-grid {
@@ -397,6 +397,27 @@
         .sorotan-agenda {
             border-top: 1px dashed var(--border);
             padding-top: 15px;
+            margin-top: 15px;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px; /* Spasi untuk scrollbar */
+            min-height: 0; /* Wajib ada di child flexbox yang punya overflow */
+        }
+        
+        /* Custom Scrollbar khusus untuk sorotan agenda */
+        .sorotan-agenda::-webkit-scrollbar {
+            width: 5px;
+        }
+        .sorotan-agenda::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        .sorotan-agenda::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .sorotan-agenda::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
         
         .sorotan-title {
@@ -632,8 +653,9 @@
                                 @for($day = 1; $day <= $daysInMonth; $day++)
                                     @php
                                         $hasEvent = in_array($day, $eventDates);
+                                        $currentDate = \Carbon\Carbon::create($startOfMonth->year, $startOfMonth->month, $day)->format('Y-m-d');
                                     @endphp
-                                    <div class="calendar-day {{ $hasEvent ? 'highlight' : '' }}">
+                                    <div class="calendar-day {{ $hasEvent ? 'highlight' : '' }}" onclick="showAgenda('{{ $currentDate }}')" style="cursor: pointer;" title="Klik untuk melihat agenda">
                                         {{ $day }}
                                         @if($hasEvent)
                                             <div class="event-dot"></div>
@@ -644,16 +666,16 @@
                         </div>
                         
                         <!-- Sorotan Agenda -->
-                        <div class="sorotan-agenda">
-                            <div class="sorotan-title">Sorotan Agenda</div>
-                            <div class="sorotan-grid">
+                        <div class="sorotan-agenda" id="sorotanContainer">
+                            <div class="sorotan-title" id="sorotanTitle">Sorotan Agenda</div>
+                            <div class="sorotan-grid" id="sorotanGrid">
                                 @forelse($agendaBulanan->take(4) as $a)
                                 <div class="sorotan-item">
                                     <div class="sorotan-date">{{ \Carbon\Carbon::parse($a->date)->format('d') }}</div>
                                     <div class="sorotan-text">{{ \Illuminate\Support\Str::limit($a->title, 20) }}</div>
                                 </div>
                                 @empty
-                                <div style="color: var(--text-light); font-size: 0.85rem;">Tidak ada sorotan bulan ini.</div>
+                                <div style="color: var(--text-light); font-size: 0.85rem; grid-column: 1 / -1;">Tidak ada sorotan bulan ini.</div>
                                 @endforelse
                             </div>
                         </div>
@@ -683,6 +705,8 @@
             </div>
         </div>
     </div>
+
+
 
     <footer>
         <div class="marquee">
@@ -744,6 +768,64 @@
             // Reset interval agar tidak langsung loncat saat baru di-klik
             clearInterval(slideInterval);
             slideInterval = setInterval(nextSlide, slideDelay);
+        }
+
+        // Data Agenda dari PHP
+        const agendaDataRaw = @json($agendaBulanan);
+        const agendaData = {};
+        
+        // Kelompokkan berdasarkan tanggal
+        agendaDataRaw.forEach(item => {
+            const dateOnly = item.date.split(' ')[0]; // Ambil YYYY-MM-DD
+            if(!agendaData[dateOnly]) {
+                agendaData[dateOnly] = [];
+            }
+            agendaData[dateOnly].push(item);
+        });
+
+        function showAgenda(dateStr) {
+            // Hentikan carousel sementara ketika interaksi agar user bisa baca
+            clearInterval(slideInterval);
+
+            const sorotanTitle = document.getElementById('sorotanTitle');
+            const sorotanGrid = document.getElementById('sorotanGrid');
+
+            // Format tanggal (contoh: 17 Agustus 2026)
+            const dateObj = new Date(dateStr);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            sorotanTitle.textContent = "Agenda: " + dateObj.toLocaleDateString('id-ID', options);
+
+            const agendaList = agendaData[dateStr] || [];
+            let html = '';
+            
+            if (agendaList.length > 0) {
+                // Gunakan 1 kolom jika mau menampilkan lokasi/waktu agar tidak terlalu padat
+                sorotanGrid.style.gridTemplateColumns = '1fr';
+                
+                agendaList.forEach(item => {
+                    const startTime = item.start_time.substring(0, 5);
+                    const endTime = item.end_time ? item.end_time.substring(0, 5) : 'Selesai';
+                    html += `
+                    <div class="sorotan-item" style="flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px; background: #f8fafc; border-radius: 6px; border-left: 3px solid var(--purple);">
+                        <div style="font-weight: 700; color: var(--text-dark); font-size: 0.85rem;">${item.title}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-light); display:flex; gap:10px; flex-wrap:wrap;">
+                            <span style="display:flex; align-items:center; gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> ${startTime} - ${endTime}</span>
+                            <span style="display:flex; align-items:center; gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${item.location || '-'}</span>
+                        </div>
+                    </div>`;
+                });
+            } else {
+                sorotanGrid.style.gridTemplateColumns = '1fr';
+                html = `<div style="color: var(--text-light); font-size: 0.85rem; padding: 10px 0;">Tidak ada agenda di tanggal ini.</div>`;
+            }
+
+            sorotanGrid.innerHTML = html;
+            
+            // Lanjutkan carousel setelah 15 detik jika tidak ada interaksi lagi
+            setTimeout(() => {
+                clearInterval(slideInterval);
+                slideInterval = setInterval(nextSlide, slideDelay);
+            }, 15000);
         }
 
         // Auto Refresh page every 5 minutes to get new data
