@@ -523,9 +523,16 @@
                     <div class="agenda-list">
                         @forelse($agendaPimpinan as $a)
                         <div class="agenda-item">
-                            <div class="agenda-time">{{ \Carbon\Carbon::parse($a->start_time)->format('H.i') }}</div>
+                            <div class="agenda-time" style="font-size: 1.05rem; min-width: 110px;">
+                                {{ \Carbon\Carbon::parse($a->start_time)->format('H.i') }} - {{ $a->end_time ? \Carbon\Carbon::parse($a->end_time)->format('H.i') : 'Selesai' }}
+                            </div>
                             <div class="agenda-details" style="flex: 1;">
-                                <h4>{{ $a->title }}</h4>
+                                <h4>
+                                    {{ $a->title }}
+                                    @if($a->is_conflict)
+                                        <span style="color: #ef4444; font-size: 0.65rem; background: #fee2e2; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: 700; vertical-align: middle;">BENTROK</span>
+                                    @endif
+                                </h4>
                                 <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> {{ $a->location }}</p>
                             </div>
                             <div style="display: flex; align-items: flex-start;">
@@ -554,9 +561,16 @@
                     <div class="agenda-list">
                         @forelse($agendaUmum as $a)
                         <div class="agenda-item">
-                            <div class="agenda-time" style="color: var(--blue);">{{ \Carbon\Carbon::parse($a->start_time)->format('H.i') }}</div>
+                            <div class="agenda-time" style="color: var(--blue); font-size: 1.05rem; min-width: 110px;">
+                                {{ \Carbon\Carbon::parse($a->start_time)->format('H.i') }} - {{ $a->end_time ? \Carbon\Carbon::parse($a->end_time)->format('H.i') : 'Selesai' }}
+                            </div>
                             <div class="agenda-details" style="flex: 1;">
-                                <h4>{{ $a->title }}</h4>
+                                <h4>
+                                    {{ $a->title }}
+                                    @if($a->is_conflict)
+                                        <span style="color: #ef4444; font-size: 0.65rem; background: #fee2e2; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: 700; vertical-align: middle;">BENTROK</span>
+                                    @endif
+                                </h4>
                                 <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> {{ $a->location }}</p>
                             </div>
                             <div style="display: flex; align-items: flex-start;">
@@ -590,8 +604,16 @@
                                 <div class="date-month">{{ \Carbon\Carbon::parse($a->date)->translatedFormat('M') }}</div>
                             </div>
                             <div class="agenda-details" style="flex: 1; padding-top: 5px;">
-                                <p style="font-weight: bold; color:var(--text-light); margin-bottom:0;">{{ \Carbon\Carbon::parse($a->date)->translatedFormat('l') }}, {{ \Carbon\Carbon::parse($a->start_time)->format('H:i') }}</p>
-                                <h4>{{ $a->title }}</h4>
+                                <p style="font-weight: bold; color:var(--text-light); margin-bottom:0;">
+                                    {{ \Carbon\Carbon::parse($a->date)->translatedFormat('l') }}, 
+                                    {{ \Carbon\Carbon::parse($a->start_time)->format('H:i') }} - {{ $a->end_time ? \Carbon\Carbon::parse($a->end_time)->format('H:i') : 'Selesai' }}
+                                </p>
+                                <h4>
+                                    {{ $a->title }}
+                                    @if($a->is_conflict)
+                                        <span style="color: #ef4444; font-size: 0.65rem; background: #fee2e2; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: 700; vertical-align: middle;">BENTROK</span>
+                                    @endif
+                                </h4>
                             </div>
                             <div style="display: flex; align-items: flex-start;">
                                 <span class="status-badge status-{{ strtolower($a->status) }}">

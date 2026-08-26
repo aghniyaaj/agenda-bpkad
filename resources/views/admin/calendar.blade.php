@@ -171,15 +171,16 @@
             locale: 'id', // Bahasa Indonesia
             height: 700,
             firstDay: 1, // Senin
-            slotMinTime: '07:00:00', // Sesuai mockup jam mulai
-            slotMaxTime: '17:00:00',
+            slotMinTime: '06:00:00', // Mulai lebih pagi
+            slotMaxTime: '23:00:00', // Diperpanjang sampai malam untuk agenda lembur
             allDaySlot: false,
             headerToolbar: false, // Kita sembunyikan bawaannya
+            displayEventEnd: true, // Tampilkan jam selesai di semua tampilan (termasuk bulan)
             events: '{{ route('admin.api.events') }}',
             eventTimeFormat: {
                 hour: '2-digit',
                 minute: '2-digit',
-                separator: ' ',
+                separator: ' - ',
                 meridiem: false,
                 hour12: false
             },
@@ -193,6 +194,12 @@
             datesSet: function(info) {
                 // Update judul bulan
                 document.getElementById('calendar-title').innerText = info.view.title;
+            },
+            eventDidMount: function(info) {
+                if (info.event.extendedProps.is_conflict) {
+                    info.el.style.border = '2px solid red';
+                    info.el.title = 'Jadwal Bentrok!';
+                }
             },
             eventClick: function(info) {
                 var props = info.event.extendedProps;

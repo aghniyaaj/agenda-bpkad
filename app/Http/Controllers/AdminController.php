@@ -10,6 +10,8 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
+        Agenda::autoUpdateSelesai();
+        
         $today = Carbon::today();
         $nextWeek = Carbon::today()->addDays(7);
         $currentMonth = Carbon::now()->month;
@@ -36,6 +38,7 @@ class AdminController extends Controller
 
     public function pimpinanIndex(Request $request)
     {
+        Agenda::autoUpdateSelesai();
         $query = Agenda::where('category', 'pimpinan')->whereDate('date', Carbon::today());
         
         if ($request->has('search') && $request->search != '') {
@@ -59,6 +62,7 @@ class AdminController extends Controller
 
     public function umumIndex(Request $request)
     {
+        Agenda::autoUpdateSelesai();
         $query = Agenda::where('category', 'umum')->whereDate('date', Carbon::today());
         
         if ($request->has('search') && $request->search != '') {
@@ -88,6 +92,8 @@ class AdminController extends Controller
     // API for FullCalendar
     public function apiEvents(Request $request)
     {
+        Agenda::autoUpdateSelesai();
+        
         $start = $request->query('start');
         $end = $request->query('end');
 
@@ -120,7 +126,8 @@ class AdminController extends Controller
                     'status' => $agenda->status,
                     'start_time' => $agenda->start_time,
                     'end_time' => $agenda->end_time,
-                    'date' => $agenda->date
+                    'date' => $agenda->date,
+                    'is_conflict' => $agenda->is_conflict
                 ]
             ];
         }

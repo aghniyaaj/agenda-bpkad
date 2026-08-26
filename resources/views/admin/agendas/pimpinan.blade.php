@@ -64,7 +64,7 @@
             @foreach($agendas as $agenda)
             <tr style="border-bottom: 1px solid var(--border);">
                 <td style="padding: 15px 10px; font-weight: 600; color: var(--primary);">
-                    {{ \Carbon\Carbon::parse($agenda->start_time)->format('H.i') }}
+                    {{ \Carbon\Carbon::parse($agenda->start_time)->format('H.i') }} - {{ $agenda->end_time ? \Carbon\Carbon::parse($agenda->end_time)->format('H.i') : 'Selesai' }}
                 </td>
                 <td style="padding: 15px 10px;">
                     @php
@@ -86,6 +86,9 @@
                 </td>
                 <td style="padding: 15px 10px; font-weight: 600; color: var(--text-dark);">
                     {{ $agenda->title }}
+                    @if(isset($agenda->is_conflict) && $agenda->is_conflict)
+                        <span style="color: #ef4444; font-size: 0.75rem; background: #fee2e2; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: 600;" title="Jadwal bentrok dengan agenda lain">BENTROK</span>
+                    @endif
                 </td>
                 <td style="padding: 15px 10px; color: var(--text-light); font-size: 0.9rem; display: flex; align-items: center; gap: 5px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>

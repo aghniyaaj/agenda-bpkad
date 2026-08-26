@@ -10,6 +10,8 @@ class DisplayController extends Controller
 {
     public function index()
     {
+        Agenda::autoUpdateSelesai();
+        
         $today = Carbon::today();
         $nextWeek = Carbon::today()->addDays(7);
         $currentMonth = Carbon::now()->month;
