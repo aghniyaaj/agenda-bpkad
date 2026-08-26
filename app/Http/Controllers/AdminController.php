@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AgendaNotifMail;
 use App\Models\Agenda;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
 class AdminController extends Controller
@@ -206,5 +209,38 @@ class AdminController extends Controller
     {
         $agenda->delete();
         return redirect()->back()->with('success', 'Agenda berhasil dihapus.');
+    }
+
+    /**
+     * Kirim 1 email ringkasan semua agenda hari ini.
+     * Dipanggil manual dari tombol di dashboard.
+     */
+    public function kirimNotifHarian(Request $request)
+    {
+        $emailConfig = config('mail.notify_to');
+
+        if (!$emailConfig) {
+            return redirect()->back()->with('error', 'Email tujuan belum diset di konfigurasi (.env).');
+        }
+
+        $agendaHariIni = Agenda::whereDate('date', Carbon::today())
+            ->where('status', '!=', 'batal')
+            ->orderBy('start_time', 'asc')
+            ->get();
+
+        if ($agendaHariIni->isEmpty()) {
+            return redirect()->back()->with('warning', 'Tidak ada agenda aktif hari ini yang bisa dikirim.');
+        }
+
+        // Support multiple email dipisah koma
+        $emailList = array_filter(array_map('trim', explode(',', $emailConfig)));
+
+        try {
+            Mail::to($emailList)->send(new AgendaNotifMail($agendaHariIni));
+            return redirect()->back()->with('success', 'Notifikasi agenda hari ini berhasil dikirim ke ' . count($emailList) . ' penerima.');
+        } catch (\Exception $e) {
+            Log::error('Gagal kirim email notifikasi harian: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mengirim email: ' . $e->getMessage());
+        }
     }
 }

@@ -31,4 +31,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/agendas/{agenda}/edit', [AdminController::class, 'edit'])->name('agendas.edit');
     Route::put('/agendas/{agenda}', [AdminController::class, 'update'])->name('agendas.update');
     Route::delete('/agendas/{agenda}', [AdminController::class, 'destroy'])->name('agendas.destroy');
+
+    // Kirim Notifikasi Email Harian (manual dari dashboard)
+    Route::post('/notifikasi/kirim', [AdminController::class, 'kirimNotifHarian'])->name('notifikasi.kirim');
 });

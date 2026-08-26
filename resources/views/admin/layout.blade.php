@@ -176,11 +176,7 @@
         </header>
         
         <div class="content">
-            @if(session('success'))
-                <div id="successNotification" style="background: #dcfce7; color: #166534; padding: 15px; border-radius: 6px; margin-bottom: 20px; transition: opacity 0.5s ease;">
-                    {{ session('success') }}
-                </div>
-            @endif
+
             
             @if($errors->any())
                 <div style="background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
@@ -441,5 +437,6 @@
             document.getElementById('deleteAgendaModal').style.display = 'flex';
         }
     </script>
+    @stack('scripts')
 </body>
 </html>

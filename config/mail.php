@@ -115,4 +115,16 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Notification Destination Email
+    |--------------------------------------------------------------------------
+    |
+    | Alamat email tujuan untuk notifikasi agenda (dibuat, diperbarui, dihapus).
+    | Set MAIL_NOTIFY_TO di file .env.
+    |
+    */
+
+    'notify_to' => env('MAIL_NOTIFY_TO', null),
+
 ];

@@ -87,8 +87,46 @@
     </div>
 </div>
 
+{{-- Flash Messages (auto-dismiss 4 detik) --}}
+@if(session('success'))
+<div id="flash-success" style="background:#d1fae5; border:1px solid #6ee7b7; color:#065f46; padding:14px 20px; border-radius:10px; margin-bottom:20px; display:flex; align-items:center; gap:10px; font-size:0.9rem; font-weight:500; transition: opacity 0.5s ease;">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    {{ session('success') }}
+</div>
+@endif
+@if(session('warning'))
+<div id="flash-warning" style="background:#fef3c7; border:1px solid #fcd34d; color:#92400e; padding:14px 20px; border-radius:10px; margin-bottom:20px; display:flex; align-items:center; gap:10px; font-size:0.9rem; font-weight:500; transition: opacity 0.5s ease;">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    {{ session('warning') }}
+</div>
+@endif
+@if(session('error'))
+<div id="flash-error" style="background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; padding:14px 20px; border-radius:10px; margin-bottom:20px; display:flex; align-items:center; gap:10px; font-size:0.9rem; font-weight:500; transition: opacity 0.5s ease;">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    {{ session('error') }}
+</div>
+@endif
+
+{{-- Tombol Kirim Notifikasi Email Harian --}}
+<div style="background: linear-gradient(135deg, #800000 0%, #b91c1c 100%); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+    <div>
+        <p style="margin:0; color:#ffffff; font-size:1rem; font-weight:700;">📧 Kirim Notifikasi Agenda Hari Ini</p>
+        <p style="margin:4px 0 0; color:#fecaca; font-size:0.82rem;">
+            Kirim ringkasan semua agenda hari ini ke penerima yang terdaftar dalam satu email.
+        </p>
+    </div>
+    <form method="POST" action="{{ route('admin.notifikasi.kirim') }}" id="form-notif-harian">
+        @csrf
+        <button type="button" id="btn-kirim-notif" onclick="document.getElementById('modal-notif').style.display='flex'" style="background:#ffffff; color:#800000; border:none; padding:10px 22px; border-radius:8px; font-size:0.88rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Kirim Sekarang
+        </button>
+    </form>
+</div>
+
 <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
     <h3 style="margin-bottom: 20px;">Jadwal Agenda Terdekat</h3>
+
     <table>
         <thead>
             <tr>
@@ -129,3 +167,54 @@
     </table>
 </div>
 @endsection
+
+@push('scripts')
+{{-- Custom Modal Konfirmasi Kirim Notifikasi --}}
+<div id="modal-notif" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;">
+    <div onclick="document.getElementById('modal-notif').style.display='none'" style="position:absolute; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px);"></div>
+    <div style="position:relative; background:#ffffff; border-radius:16px; padding:36px 32px; width:100%; max-width:420px; margin:16px; box-shadow:0 25px 60px rgba(0,0,0,0.2); text-align:center; animation: modalIn 0.2s ease;">
+        <div style="width:64px; height:64px; background:linear-gradient(135deg,#800000,#b91c1c); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+            <svg width="28" height="28" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </div>
+        <h3 style="margin:0 0 8px; color:#0f172a; font-size:1.15rem; font-weight:700;">Kirim Notifikasi Sekarang?</h3>
+        <p style="margin:0 0 28px; color:#64748b; font-size:0.9rem; line-height:1.6;">
+            Sistem akan mengirimkan <strong>1 email ringkasan</strong> berisi seluruh agenda hari ini ke semua penerima yang terdaftar.
+        </p>
+        <div style="display:flex; gap:12px; justify-content:center;">
+            <button onclick="document.getElementById('modal-notif').style.display='none'"
+                style="flex:1; padding:11px 0; border-radius:8px; border:1.5px solid #e2e8f0; background:#f8fafc; color:#475569; font-size:0.9rem; font-weight:600; cursor:pointer;"
+                onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                Batal
+            </button>
+            <button onclick="document.getElementById('form-notif-harian').submit()"
+                style="flex:1; padding:11px 0; border-radius:8px; border:none; background:linear-gradient(135deg,#800000,#b91c1c); color:#ffffff; font-size:0.9rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;"
+                onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+                <svg width="15" height="15" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Ya, Kirim!
+            </button>
+        </div>
+    </div>
+</div>
+<style>
+@keyframes modalIn {
+    from { opacity: 0; transform: scale(0.93) translateY(12px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+</style>
+<script>
+(function() {
+    var ids = ['flash-success', 'flash-warning', 'flash-error'];
+    ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        setTimeout(function() {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(-8px)';
+            el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            setTimeout(function() { el.style.display = 'none'; }, 500);
+        }, 4000);
+    });
+})();
+</script>
+@endpush
+
