@@ -117,10 +117,15 @@
     </div>
     <form method="POST" action="{{ route('admin.notifikasi.kirim') }}" id="form-notif-harian">
         @csrf
-        <button type="button" id="btn-kirim-notif" onclick="document.getElementById('modal-notif').style.display='flex'" style="background:#ffffff; color:#800000; border:none; padding:10px 22px; border-radius:8px; font-size:0.88rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            Kirim Sekarang
-        </button>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" onclick="document.getElementById('modal-email-setting').style.display='flex'" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'" title="Pengaturan Email">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button type="button" id="btn-kirim-notif" onclick="document.getElementById('modal-notif').style.display='flex'" style="background:#ffffff; color:#800000; border:none; padding:10px 22px; border-radius:8px; font-size:0.88rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Kirim Sekarang
+            </button>
+        </div>
     </form>
 </div>
 
@@ -193,6 +198,34 @@
                 Ya, Kirim!
             </button>
         </div>
+    </div>
+</div>
+
+{{-- Modal Pengaturan Email --}}
+<div id="modal-email-setting" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;">
+    <div onclick="document.getElementById('modal-email-setting').style.display='none'" style="position:absolute; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px);"></div>
+    <div style="position:relative; background:#ffffff; border-radius:16px; padding:36px 32px; width:100%; max-width:500px; margin:16px; box-shadow:0 25px 60px rgba(0,0,0,0.2); text-align:left; animation: modalIn 0.2s ease;">
+        <h3 style="margin:0 0 16px; color:#0f172a; font-size:1.15rem; font-weight:700;">Pengaturan Email Notifikasi</h3>
+        <form method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; margin-bottom:8px; font-weight:600; color:#334155; font-size:0.9rem;">Alamat Email Tujuan</label>
+                <input type="text" name="notification_email" value="{{ old('notification_email', $emailConfig ?? '') }}" placeholder="email1@example.com, email2@example.com" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.95rem;">
+                <p style="margin:8px 0 0; color:#64748b; font-size:0.8rem;">Bisa memasukkan lebih dari satu email dengan dipisahkan koma (,).</p>
+            </div>
+            <div style="display:flex; gap:12px; justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('modal-email-setting').style.display='none'"
+                    style="padding:10px 20px; border-radius:8px; border:1.5px solid #e2e8f0; background:#f8fafc; color:#475569; font-size:0.9rem; font-weight:600; cursor:pointer;"
+                    onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                    Batal
+                </button>
+                <button type="submit"
+                    style="padding:10px 20px; border-radius:8px; border:none; background:var(--primary); color:#ffffff; font-size:0.9rem; font-weight:700; cursor:pointer;"
+                    onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    Simpan
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 <style>

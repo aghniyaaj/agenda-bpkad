@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\AgendaNotifMail;
 use App\Models\Agenda;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -30,12 +31,18 @@ class AdminController extends Controller
             ->take(5)
             ->get();
 
+        $emailSetting = Setting::where('key', 'notification_email')->first();
+        $emailConfig = ($emailSetting && !empty(trim($emailSetting->value)))
+            ? $emailSetting->value
+            : config('mail.notify_to');
+
         return view('admin.dashboard', compact(
             'countPimpinanHariIni',
             'countUmumHariIni',
             'countSeminggu',
             'countSebulan',
-            'agendas'
+            'agendas',
+            'emailConfig'
         ));
     }
 
@@ -217,10 +224,13 @@ class AdminController extends Controller
      */
     public function kirimNotifHarian(Request $request)
     {
-        $emailConfig = config('mail.notify_to');
+        $emailSetting = Setting::where('key', 'notification_email')->first();
+        $emailConfig = ($emailSetting && !empty(trim($emailSetting->value)))
+            ? $emailSetting->value
+            : config('mail.notify_to');
 
         if (!$emailConfig) {
-            return redirect()->back()->with('error', 'Email tujuan belum diset di konfigurasi (.env).');
+            return redirect()->back()->with('error', 'Email tujuan belum diset di pengaturan aplikasi maupun di file .env.');
         }
 
         $agendaHariIni = Agenda::whereDate('date', Carbon::today())

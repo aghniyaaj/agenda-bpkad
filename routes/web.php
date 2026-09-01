@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DisplayController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\SettingController;
 
 // Public Display
 Route::get('/', [DisplayController::class, 'index'])->name('display');
@@ -34,4 +35,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 
     // Kirim Notifikasi Email Harian (manual dari dashboard)
     Route::post('/notifikasi/kirim', [AdminController::class, 'kirimNotifHarian'])->name('notifikasi.kirim');
+
+    // Settings
+    Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 });
