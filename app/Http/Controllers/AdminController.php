@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\AgendaNotifMail;
 use App\Models\Agenda;
-use App\Models\Setting;
+use App\Models\NotificationEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -31,10 +31,13 @@ class AdminController extends Controller
             ->take(5)
             ->get();
 
-        $emailSetting = Setting::where('key', 'notification_email')->first();
-        $emailConfig = ($emailSetting && !empty(trim($emailSetting->value)))
-            ? $emailSetting->value
-            : config('mail.notify_to');
+        $emailRows = NotificationEmail::orderBy('id', 'asc')->get();
+        if ($emailRows->count() > 0) {
+            $emailList = $emailRows->pluck('email')->toArray();
+        } else {
+            $envConfig = config('mail.notify_to');
+            $emailList = $envConfig ? array_filter(array_map('trim', explode(',', $envConfig))) : [];
+        }
 
         return view('admin.dashboard', compact(
             'countPimpinanHariIni',
@@ -42,7 +45,8 @@ class AdminController extends Controller
             'countSeminggu',
             'countSebulan',
             'agendas',
-            'emailConfig'
+            'emailRows',
+            'emailList'
         ));
     }
 
@@ -224,12 +228,15 @@ class AdminController extends Controller
      */
     public function kirimNotifHarian(Request $request)
     {
-        $emailSetting = Setting::where('key', 'notification_email')->first();
-        $emailConfig = ($emailSetting && !empty(trim($emailSetting->value)))
-            ? $emailSetting->value
-            : config('mail.notify_to');
+        $emailRows = NotificationEmail::pluck('email')->toArray();
+        if (!empty($emailRows)) {
+            $emailList = $emailRows;
+        } else {
+            $envConfig = config('mail.notify_to');
+            $emailList = $envConfig ? array_filter(array_map('trim', explode(',', $envConfig))) : [];
+        }
 
-        if (!$emailConfig) {
+        if (empty($emailList)) {
             return redirect()->back()->with('error', 'Email tujuan belum diset di pengaturan aplikasi maupun di file .env.');
         }
 
@@ -241,9 +248,6 @@ class AdminController extends Controller
         if ($agendaHariIni->isEmpty()) {
             return redirect()->back()->with('warning', 'Tidak ada agenda aktif hari ini yang bisa dikirim.');
         }
-
-        // Support multiple email dipisah koma
-        $emailList = array_filter(array_map('trim', explode(',', $emailConfig)));
 
         try {
             Mail::to($emailList)->send(new AgendaNotifMail($agendaHariIni));

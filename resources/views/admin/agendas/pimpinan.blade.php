@@ -98,9 +98,10 @@
                     @php
                         $st = strtolower($agenda->status);
                         $sColor = '#94a3b8';
-                        if($st == 'selesai') $sColor = '#3b82f6'; // Blue
-                        elseif($st == 'aktif') $sColor = '#10b981'; // Green
-                        elseif($st == 'ditunda') $sColor = '#eab308'; // Yellow
+                        if($st == 'selesai') $sColor = '#dc2626'; // Merah
+                        elseif($st == 'aktif') $sColor = '#10b981'; // Hijau
+                        elseif($st == 'ditunda') $sColor = '#eab308'; // Kuning
+                        elseif($st == 'batal') $sColor = '#64748b'; // Abu
                     @endphp
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: {{ $sColor }}">
                         <div style="width: 6px; height: 6px; border-radius: 50%; background: {{ $sColor }};"></div>

@@ -47,25 +47,43 @@ class Agenda extends Model
 
     public static function autoUpdateSelesai()
     {
-        // 1. Update yang hari-hari sebelumnya
+        $now = \Carbon\Carbon::now();
+        $todayStr = $now->format('Y-m-d');
+
+        // 1. Update agenda dari hari-hari sebelum hari ini yang masih 'aktif' -> 'selesai'
         static::where('status', 'aktif')
-            ->whereDate('date', '<', \Carbon\Carbon::today())
+            ->whereDate('date', '<', $now->toDateString())
             ->update(['status' => 'selesai']);
-            
-        // 2. Update hari ini yang sudah lewat jamnya
+
+        // 2. Update agenda hari ini yang sudah benar-benar melewati jam selesainya
         $agendasHariIni = static::where('status', 'aktif')
-            ->whereDate('date', \Carbon\Carbon::today())
+            ->whereDate('date', $now->toDateString())
             ->get();
-            
+
         foreach ($agendasHariIni as $agenda) {
-            // Jika tidak ada end_time, kita anggap selesai 2 jam setelah start_time
-            $end = $agenda->end_time 
-                ? \Carbon\Carbon::parse($agenda->end_time) 
-                : \Carbon\Carbon::parse($agenda->start_time)->addHours(2);
-                
-            if (\Carbon\Carbon::now()->format('H:i:s') > $end->format('H:i:s')) {
+            if (!$agenda->start_time) continue;
+
+            $dateStr = \Carbon\Carbon::parse($agenda->date)->format('Y-m-d');
+            $startDateTime = \Carbon\Carbon::parse($dateStr . ' ' . $agenda->start_time);
+
+            if (!empty($agenda->end_time)) {
+                $endDateTime = \Carbon\Carbon::parse($dateStr . ' ' . $agenda->end_time);
+
+                // Jika end_time lebih kecil atau sama dengan start_time (umpamanya input jam 00:04 saat start 10:00),
+                // maka anggap durasi 2 jam setelah start_time
+                if ($endDateTime <= $startDateTime) {
+                    $endDateTime = $startDateTime->copy()->addHours(2);
+                }
+            } else {
+                // Default durasi 2 jam jika end_time kosong
+                $endDateTime = $startDateTime->copy()->addHours(2);
+            }
+
+            // HANYA update ke 'selesai' jika waktu SEKARANG sudah melewati endDateTime
+            if ($now > $endDateTime) {
                 $agenda->update(['status' => 'selesai']);
             }
         }
     }
 }
+

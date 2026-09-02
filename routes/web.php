@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DisplayController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\NotificationEmailController;
 
 // Public Display
 Route::get('/', [DisplayController::class, 'index'])->name('display');
@@ -36,6 +36,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     // Kirim Notifikasi Email Harian (manual dari dashboard)
     Route::post('/notifikasi/kirim', [AdminController::class, 'kirimNotifHarian'])->name('notifikasi.kirim');
 
-    // Settings
-    Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+    // Email Notifikasi Management
+    Route::post('/emails', [NotificationEmailController::class, 'store'])->name('emails.store');
+    Route::delete('/emails/{id}', [NotificationEmailController::class, 'destroy'])->name('emails.destroy');
+
+    // Backward-compatibility routes for /settings URL
+    Route::post('/settings', [NotificationEmailController::class, 'store'])->name('settings.update');
+    Route::delete('/settings/{id}', [NotificationEmailController::class, 'destroy'])->name('settings.destroy');
 });
+
+
+

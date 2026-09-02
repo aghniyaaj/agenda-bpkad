@@ -157,7 +157,14 @@
                 <td>{{ $agenda->title }}</td>
                 <td>{{ $agenda->location }}</td>
                 <td>
-                    <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; text-transform: capitalize;">
+                    @php
+                        $st = strtolower($agenda->status);
+                        $bg = '#dcfce7'; $color = '#166534'; // aktif = hijau
+                        if ($st == 'selesai') { $bg = '#fee2e2'; $color = '#991b1b'; } // selesai = MERAH
+                        elseif ($st == 'ditunda') { $bg = '#fef3c7'; $color = '#92400e'; } // ditunda = kuning
+                        elseif ($st == 'batal') { $bg = '#f3f4f6'; $color = '#4b5563'; } // batal = abu
+                    @endphp
+                    <span style="background: {{ $bg }}; color: {{ $color }}; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; text-transform: capitalize;">
                         {{ $agenda->status }}
                     </span>
                 </td>
@@ -204,30 +211,91 @@
 {{-- Modal Pengaturan Email --}}
 <div id="modal-email-setting" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;">
     <div onclick="document.getElementById('modal-email-setting').style.display='none'" style="position:absolute; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px);"></div>
-    <div style="position:relative; background:#ffffff; border-radius:16px; padding:36px 32px; width:100%; max-width:500px; margin:16px; box-shadow:0 25px 60px rgba(0,0,0,0.2); text-align:left; animation: modalIn 0.2s ease;">
+    <div style="position:relative; background:#ffffff; border-radius:16px; padding:32px; width:100%; max-width:520px; margin:16px; box-shadow:0 25px 60px rgba(0,0,0,0.2); text-align:left; animation: modalIn 0.2s ease;">
         <h3 style="margin:0 0 16px; color:#0f172a; font-size:1.15rem; font-weight:700;">Pengaturan Email Notifikasi</h3>
-        <form method="POST" action="{{ route('admin.settings.update') }}">
+        
+        {{-- Daftar Email Tersimpan --}}
+        <div style="margin-bottom: 20px;">
+            <label style="display:block; margin-bottom:8px; font-weight:600; color:#334155; font-size:0.9rem;">Daftar Email Tersimpan (Tabel: emails):</label>
+            @if(isset($emailRows) && $emailRows->count() > 0)
+                <div style="display:flex; flex-direction:column; gap:8px; max-height:160px; overflow-y:auto; padding-right:4px;">
+                    @foreach($emailRows as $item)
+                        <div style="display:flex; align-items:center; justify-content:space-between; background:#f8fafc; border:1px solid #e2e8f0; padding:8px 14px; border-radius:8px; font-size:0.9rem; color:#1e293b;">
+                            <span style="display:flex; align-items:center; gap:8px;">
+                                <svg width="16" height="16" fill="none" stroke="#800000" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                <strong>{{ $item->email }}</strong>
+                            </span>
+                            <button type="button" onclick="confirmDeleteEmail('{{ route('admin.emails.destroy', $item->id) }}', '{{ $item->email }}')" style="background:none; border:none; color:#dc2626; font-size:0.85rem; font-weight:600; cursor:pointer; padding:4px 8px; border-radius:6px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'">
+                                Hapus
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div style="background:#f1f5f9; padding:12px; border-radius:8px; font-size:0.85rem; color:#64748b; text-align:center;">
+                    Belum ada email tersimpan khusus di database.
+                    @if(!empty($emailList))
+                        <br><span style="font-size:0.8rem; color:#475569;">Saat ini menggunakan email default dari .env: {{ implode(', ', $emailList) }}</span>
+                    @endif
+                </div>
+            @endif
+        </div>
+
+        {{-- Form Tambah Email Baru --}}
+        <form method="POST" action="{{ route('admin.emails.store') }}">
             @csrf
             <div style="margin-bottom: 20px;">
-                <label style="display:block; margin-bottom:8px; font-weight:600; color:#334155; font-size:0.9rem;">Alamat Email Tujuan</label>
-                <input type="text" name="notification_email" value="{{ old('notification_email', $emailConfig ?? '') }}" placeholder="email1@example.com, email2@example.com" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.95rem;">
-                <p style="margin:8px 0 0; color:#64748b; font-size:0.8rem;">Bisa memasukkan lebih dari satu email dengan dipisahkan koma (,).</p>
+                <label style="display:block; margin-bottom:8px; font-weight:600; color:#334155; font-size:0.9rem;">Tambah Email Baru</label>
+                <input type="text" name="notification_email" value="" placeholder="Contoh: email1@example.com, email2@example.com" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.95rem;">
+                <p style="margin:8px 0 0; color:#64748b; font-size:0.8rem;">Setiap email yang dimasukkan akan disimpan sebagai 1 baris di tabel <code>emails</code>. Bisa memasukkan lebih dari satu dipisahkan koma (,).</p>
             </div>
             <div style="display:flex; gap:12px; justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-email-setting').style.display='none'"
                     style="padding:10px 20px; border-radius:8px; border:1.5px solid #e2e8f0; background:#f8fafc; color:#475569; font-size:0.9rem; font-weight:600; cursor:pointer;"
                     onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
-                    Batal
+                    Tutup
                 </button>
                 <button type="submit"
                     style="padding:10px 20px; border-radius:8px; border:none; background:var(--primary); color:#ffffff; font-size:0.9rem; font-weight:700; cursor:pointer;"
                     onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-                    Simpan
+                    + Simpan Email
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+{{-- Custom Modal Konfirmasi Hapus Email --}}
+<div id="modal-confirm-delete-email" style="display:none; position:fixed; inset:0; z-index:10000; align-items:center; justify-content:center;">
+    <div onclick="closeDeleteEmailModal()" style="position:absolute; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px);"></div>
+    <div style="position:relative; background:#ffffff; border-radius:16px; padding:36px 32px; width:100%; max-width:420px; margin:16px; box-shadow:0 25px 60px rgba(0,0,0,0.25); text-align:center; animation: modalIn 0.2s ease;">
+        <div style="width:64px; height:64px; background:linear-gradient(135deg,#800000,#dc2626); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 8px 20px rgba(128,0,0,0.25);">
+            <svg width="28" height="28" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </div>
+        <h3 style="margin:0 0 8px; color:#0f172a; font-size:1.15rem; font-weight:700;">Hapus Email Notifikasi?</h3>
+        <p style="margin:0 0 24px; color:#64748b; font-size:0.9rem; line-height:1.6;">
+            Apakah Anda yakin ingin menghapus email <strong id="delete-email-target" style="color:#800000; word-break:break-all;">email@example.com</strong> dari daftar notifikasi?
+        </p>
+        <form id="form-delete-email" method="POST" action="">
+            @csrf
+            @method('DELETE')
+            <div style="display:flex; gap:12px; justify-content:center;">
+                <button type="button" onclick="closeDeleteEmailModal()"
+                    style="flex:1; padding:11px 0; border-radius:8px; border:1.5px solid #e2e8f0; background:#f8fafc; color:#475569; font-size:0.9rem; font-weight:600; cursor:pointer;"
+                    onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                    Batal
+                </button>
+                <button type="submit"
+                    style="flex:1; padding:11px 0; border-radius:8px; border:none; background:linear-gradient(135deg,#800000,#dc2626); color:#ffffff; font-size:0.9rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 12px rgba(128,0,0,0.3);"
+                    onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    <svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    Ya, Hapus!
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
 @keyframes modalIn {
     from { opacity: 0; transform: scale(0.93) translateY(12px); }
@@ -235,6 +303,16 @@
 }
 </style>
 <script>
+function confirmDeleteEmail(actionUrl, emailAddress) {
+    document.getElementById('form-delete-email').action = actionUrl;
+    document.getElementById('delete-email-target').textContent = emailAddress;
+    document.getElementById('modal-confirm-delete-email').style.display = 'flex';
+}
+
+function closeDeleteEmailModal() {
+    document.getElementById('modal-confirm-delete-email').style.display = 'none';
+}
+
 (function() {
     var ids = ['flash-success', 'flash-warning', 'flash-error'];
     ids.forEach(function(id) {
